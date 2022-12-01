@@ -55,10 +55,9 @@ lentini.all.melt[avg.lentini, xci := xci, on = "sample == sample"]
 
 clust.lentini <- lentini.all.melt[!is.na(cluster), median(xa, na.rm=T), by=c("cluster", "sex", "day", "sample", "xci")]
 
-# Linear regression
-clust.wang[lineage %in% c("X4cell", "X8cell", "E2.5", "E3", "E3.5") & sex == "male", summary(lm(V1~factor(cluster)+lineage+genotype))]
-clust.wang[lineage %in% c("X4cell", "X8cell", "E2.5", "E3", "E3.5") & sex == "female" & genotype != "XIST", summary(lm(V1~factor(cluster)+lineage+genotype))]
-clust.wang[lineage %in% c("X4cell", "X8cell", "E2.5", "E3", "E3.5") & sex == "female" & genotype != "KO", summary(lm(V1~factor(cluster)+lineage+genotype))]
+# ANOVA+TukeyHSD
+clust.wang[lineage %in% c("X4cell", "X8cell", "E2.5", "E3", "E3.5") & sex == "male", TukeyHSD(aov(lm(V1~factor(cluster)+lineage+genotype)))]
+clust.wang[lineage %in% c("X4cell", "X8cell", "E2.5", "E3", "E3.5") & sex == "female", TukeyHSD(aov(lm(V1~factor(cluster)+lineage+genotype)))]
 
 # Average expression per gene
 gn.wang <- wang.all.melt[chr %in% paste0("chr", c(1:19,"X")), mean(value), by=c("gene", "chr", "lineage", "cluster", "genotype")]
