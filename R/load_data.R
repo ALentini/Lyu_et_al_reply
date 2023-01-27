@@ -3,8 +3,8 @@ library(magrittr)
 
 ### set up functions
 
-fpkm2tpm <- function(fpkm){
-  (fpkm / sum(fpkm,na.rm = T)) * 1e6
+fpkm.scale <- function(fpkm, scale.factor){
+  fpkm * (scale.factor / sum(fpkm, na.rm=T))
 }
 
 scale.allele <- function(x, ratio, labs = c("c57", "cast")){
@@ -65,8 +65,8 @@ deng.dge.ss1 <- list(
 )
 deng.dge.ss1$ratio <- with(deng.dge.ss1, counts.c57 / (counts.c57+counts.cast))
 deng.dge.ss1$meta[, c("Lineage", "Maternal") := list(factor(Lineage, levels=unique(Lineage)), gsub(" .*","",GeneticBackground) )]
-deng.dge.ss1$tpm <- apply(deng.dge.ss1$rpkm,2,fpkm2tpm) # convert rpkm to tpm
-deng.dge.ss1$allele <- with(deng.dge.ss1, scale.allele(rpkm, ratio))
+deng.dge.ss2$rpkm.fix <- apply(deng.dge.ss2$rpkm,2,fpkm.scale, scale.factor = 45e4) # rescale uneven rpkm depth
+deng.dge.ss2$allele <- with(deng.dge.ss2, scale.allele(rpkm.fix, ratio))
 
 # load SS2 data
 deng.dge.ss2 <- list(
@@ -83,8 +83,8 @@ deng.dge.ss2$allele <- with(deng.dge.ss2, scale.allele(rpkm, ratio))
 
 # melt data
 deng.all.melt <- rbindlist(list(
-  add.info(as.data.table(reshape2::melt(deng.dge.ss1$rpkm)),deng.dge.ss1$refseq, deng.dge.ss1$meta), 
-  add.info(as.data.table(reshape2::melt(deng.dge.ss2$rpkm)),deng.dge.ss2$refseq, deng.dge.ss2$meta)
+  add.info(as.data.table(reshape2::melt(deng.dge.ss1$rpkm.fix)),deng.dge.ss1$refseq, deng.dge.ss1$meta), 
+  add.info(as.data.table(reshape2::melt(deng.dge.ss2$rpkm.fix)),deng.dge.ss2$refseq, deng.dge.ss2$meta)
 ), fill = T)
 deng.all.melt[,expressed := mean(value,na.rm = T)>0, by = c("gene","lineage")]
 deng.all.melt[lineage == "MIIoocyte", sex := "F"]
